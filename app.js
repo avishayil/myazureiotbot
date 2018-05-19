@@ -1,37 +1,65 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+var restify = require('restify');
+var builder = require('botbuilder');
 
-const { BotStateSet, BotFrameworkAdapter, MemoryStorage, ConversationState, UserState } = require('botbuilder');
-const restify = require('restify');
-
-// Create server
-let server = restify.createServer();
+// Setup Restify Server
+var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-    console.log(`${server.name} listening to ${server.url}`);
+    console.log('%s listening to %s', server.name, server.url);
 });
 
-// Create adapter
-const adapter = new BotFrameworkAdapter({
+// Create chat connector for communicating with the Bot Framework Service
+var connector = new builder.ChatConnector({
     appId: process.env.MicrosoftAppId,
     appPassword: process.env.MicrosoftAppPassword
 });
 
-// Add state middleware
-const storage = new MemoryStorage();
-const convoState = new ConversationState(storage);
-const userState = new UserState(storage);
-adapter.use(new BotStateSet(convoState, userState));
+// Create database adapter
+var dbAdapter = require('./db');
+var config = require("./config");
 
-// Listen for incoming requests 
-server.post('/api/messages', (req, res) => {
-    // Route received request to adapter for processing
-    adapter.processActivity(req, res, (context) => {
-        if (context.activity.type === 'message') {
-            const state = convoState.get(context);
-            const count = state.count === undefined ? state.count = 0 : ++state.count;
-            return context.sendActivity(`${count}: You said "${context.activity.text}"`);
-        } else {
-            return context.sendActivity(`[${context.activity.type} event detected]`);
+// Listen for messages from users 
+server.post('/api/messages', connector.listen());
+
+// Receive messages from the user and respond accordingly
+var bot = new builder.UniversalBot(connector, function (session) {
+    var command = session.message.text.toLowerCase();
+    if (command.startsWith("add")) {
+        return dbAdapter.addItem(session.message.text.split(' ')[1])
+            .then(() => {
+                return session.say("Item Added", "Item Added", { inputHint: builder.InputHint.ignoringInput });
+            }).catch(e => session.say(e, e, { inputHint: builder.InputHint.ignoringInput }));
+    } else if (command.startsWith("remove")) {
+        return dbAdapter.removeItem(session.message.text.split(' ')[1])
+            .then(() => {
+                return session.say("Item Removed", "Item Removed", { inputHint: builder.InputHint.ignoringInput });
+            }).catch(e => session.say(e, e, { inputHint: builder.InputHint.ignoringInput }));
+    } else {
+        switch (command) {
+            case "set up database":
+                return dbAdapter.getDatabase()
+                    .then(() => dbAdapter.getCollection())
+                    .then(() => dbAdapter.getItemsDocument())
+                    .then(() => {
+                        return session.say("Database initialized", "Database initialized", { inputHint: builder.InputHint.ignoringInput });
+                    });
+                break;
+            case "get database":
+                return dbAdapter.queryCollection()
+                    .then((results) => {
+                        var result = results[0].items;
+                        var str = result.slice(0, -1).join(', ') + ' and ' + result.slice(-1);
+                        return session.say("Database queried, the results are: " + str, "Database queried, the results are: " + str, { inputHint: builder.InputHint.ignoringInput });
+                    });
+                break;
+            case "clean database":
+                return dbAdapter.cleanup()
+                    .then(() => {
+                        return session.say("Database cleaned", "Database cleaned", { inputHint: builder.InputHint.ignoringInput });
+                    });
+                break;
+            default:
+                return session.say(`Unkonwn activity. ${count}: You said "${session.message.text}"`, `Unkonwn activity. ${count}: You said "${session.message.text}"`, { inputHint: builder.InputHint.ignoringInput });
+                break;
         }
-    });
+    }
 });

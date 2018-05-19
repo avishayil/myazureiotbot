@@ -9,7 +9,9 @@
   "author": "Microsoft",
   "license": "MIT",
   "dependencies": {
-    "botbuilder": "^4.0.0-preview1.0",
-    "restify": "^7.1.1"
+    "botbuilder": "^3.15.0",
+    "restify": "^7.1.1",
+    "async": "^1.5.2",
+    "documentdb": "^1.12.2"
   }
 }
