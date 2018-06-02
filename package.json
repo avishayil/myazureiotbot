@@ -10,8 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "botbuilder": "^3.15.0",
-    "restify": "^7.1.1",
-    "async": "^1.5.2",
-    "documentdb": "^1.12.2"
+    "documentdb": "^1.12.2",
+    "querystring": "^0.2.0",
+    "restify": "^7.1.1"
   }
 }

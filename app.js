@@ -57,8 +57,15 @@ var bot = new builder.UniversalBot(connector, function (session) {
                         return session.say("Database cleaned", "Database cleaned", { inputHint: builder.InputHint.ignoringInput });
                     });
                 break;
+            case "check":
+                return dbAdapter.getSnapshotDocument().then(result => {
+                    var tags = result.snapshot.description.tags;
+                    var str = tags.slice(0, -1).join(', ') + ' and ' + tags.slice(-1);
+                    return session.say("Here are some words that can describe what I see: " + str);
+                });
+                break;
             default:
-                return session.say(`Unkonwn activity. ${count}: You said "${session.message.text}"`, `Unkonwn activity. ${count}: You said "${session.message.text}"`, { inputHint: builder.InputHint.ignoringInput });
+                return session.say(`Unkonwn activity. You said "${session.message.text}"`, `Unkonwn activity. You said "${session.message.text}"`, { inputHint: builder.InputHint.ignoringInput });
                 break;
         }
     }

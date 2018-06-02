@@ -19,12 +19,11 @@ config.documents = {
             "peach",
             "watermelon",
             "milk"
-        ],
-        "_rid": "2iQqALu8GQABAAAAAAAAAA==",
-        "_self": "dbs/2iQqAA==/colls/2iQqALu8GQA=/docs/2iQqALu8GQABAAAAAAAAAA==/",
-        "_etag": "\"e5000dff-0000-0000-0000-5afe9bc60000\"",
-        "_attachments": "attachments/",
-        "_ts": 1526635462
+        ]
+    },
+    "snapshot": {
+        "id": "snapshot",
+        "snapshot": {}
     }
 };
 

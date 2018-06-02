@@ -85,6 +85,50 @@ exports.getItemsDocument = function () {
     });
 };
 
+exports.getSnapshotDocument = function () {
+    let document = config.documents['snapshot'];
+    let documentUrl = `${collectionUrl}/docs/${document.id}`;
+    console.log(`Getting document:\n${document.id}\n`);
+
+    return new Promise((resolve, reject) => {
+        client.readDocument(documentUrl, (err, result) => {
+            if (err) {
+                if (err.code == HttpStatusCodes.NOTFOUND) {
+                    client.createDocument(collectionUrl, document, (err, created) => {
+                        if (err) reject(err)
+                        else resolve(created);
+                    });
+                } else {
+                    reject(err);
+                }
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+exports.setSnapshot = function (snapshot) {
+    console.log(snapshot);
+    let document = config.documents['snapshot'];
+    let documentUrl = `${collectionUrl}/docs/${document.id}`;
+    console.log(`Settings result on document:\n${document.id}\n`);
+
+    let newDocument = {
+        "id": "snapshot",
+        "snapshot": snapshot
+    }
+
+    return new Promise((resolve, reject) => {
+        client.replaceDocument(documentUrl, newDocument, (err, result) => {
+            if (err) reject(err);
+            else {
+                resolve(result);
+            }
+        });
+    });
+};
+
 /**
  * Query the collection using SQL
  */
